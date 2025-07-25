@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıtlı IP Listesi</title>
+    <style>
+        /* Önceki stil kodları aynı kalacak */
+    </style>
+</head>
+<body>
+    <h1>Kayıtlı IP Adresleri</h1>
+    
+    <table id="ipTable">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>IP Adresi</th>
+                <th>Tarih</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- IP listesi buraya eklenecek -->
+        </tbody>
+    </table>
+    
+    <a href="index.html" class="back-link">Geri Dön</a>
+
+    <script>
+        // LocalStorage'dan IP'leri getir
+        const ipList = JSON.parse(localStorage.getItem('ipList')) || [];
+        const tableBody = document.querySelector('#ipTable tbody');
+        
+        if (ipList.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3">Kayıtlı IP bulunamadı</td></tr>';
+        } else {
+            ipList.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                const noCell = document.createElement('td');
+                noCell.textContent = index + 1;
+                
+                const ipCell = document.createElement('td');
+                ipCell.textContent = item.ip;
+                
+                const dateCell = document.createElement('td');
+                dateCell.textContent = item.date;
+                
+                row.appendChild(noCell);
+                row.appendChild(ipCell);
+                row.appendChild(dateCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoş Geldiniz</title>
+    <style>
+        /* Önceki stil kodları aynı kalacak */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hoş Geldiniz</h1>
+        <p>Sitemize giriş yaptığınız için teşekkür ederiz. IP adresiniz kaydedilecektir.</p>
+        
+        <div class="info" id="ipInfo">
+            IP adresiniz alınıyor...
+        </div>
+        
+        <a href="ip-list.html">Kayıtlı IP'leri Görüntüle</a>
+    </div>
+
+    <script>
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                const ip = data.ip;
+                document.getElementById('ipInfo').textContent = `IP adresiniz: ${ip}`;
+                
+                // LocalStorage'dan IP listesini al
+                let ipList = JSON.parse(localStorage.getItem('ipList')) || [];
+                
+                // Yeni IP'yi ekle
+                ipList.push({
+                    ip: ip,
+                    date: new Date().toLocaleString()
+                });
+                
+                // LocalStorage'a kaydet
+                localStorage.setItem('ipList', JSON.stringify(ipList));
+            })
+            .catch(error => {
+                console.error('IP alınırken hata oluştu:', error);
+                document.getElementById('ipInfo').textContent = 'IP adresiniz alınamadı';
+            });
+    </script>
+</body>
+</html>
