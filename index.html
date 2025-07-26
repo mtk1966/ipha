@@ -44,40 +44,34 @@
             color: #7f8c8d;
             font-size: 0.9em;
         }
-        button {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #2980b9;
-        }
-        button:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-        }
         #status {
             margin-top: 10px;
             font-size: 14px;
             color: #27ae60;
             min-height: 20px;
         }
+        .loading {
+            color: #3498db;
+        }
+        .success {
+            color: #27ae60;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .warning {
+            color: #f39c12;
+        }
     </style>
 </head>
 <body>
     <h1>Ziyaretçi IP Kayıt Sistemi</h1>
-    
+
     <div id="ip-info">
         <p><strong>Sizin IP Adresiniz:</strong> <span id="current-ip">Alınıyor...</span></p>
-        <button id="save-btn">IP'yi Sisteme Kaydet</button>
-        <div id="status"></div>
+        <div id="status" class="loading">IP adresiniz otomatik olarak kaydediliyor...</div>
     </div>
-    
+
     <div id="ip-list">
         <h2>Kayıtlı IP Listesi</h2>
         <div id="ip-entries">Yükleniyor...</div>
@@ -88,10 +82,10 @@
         const binId = "68850db0ae596e708fbc2724";
         // Public read-only key (for demonstration)
         const apiKey = "$2a$10$ElT2u5UuqrvUqt2e5dCfoOoikiRv.6Cm.LQFiQrsO.9in96rcBp0u";
-        
+
         const binUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`;
         const updateUrl = `https://api.jsonbin.io/v3/b/${binId}`;
-        
+
         // Get visitor's IP
         async function getCurrentIP() {
             try {
@@ -105,7 +99,7 @@
                 return null;
             }
         }
-        
+
         // Fetch and display IPs
         async function fetchIPs() {
             try {
@@ -114,12 +108,12 @@
                         "X-Master-Key": apiKey
                     }
                 });
-                
+
                 if (!response.ok) throw new Error("Veri alınamadı");
-                
+
                 const data = await response.json();
                 const ips = data.record.ips || [];
-                
+
                 displayIPs(ips);
             } catch (error) {
                 console.error("IP listesi alınırken hata:", error);
@@ -127,19 +121,19 @@
                     `<p style="color: #e74c3c;">IP listesi yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</p>`;
             }
         }
-        
+
         // Display IPs
         function displayIPs(ips) {
             const ipEntries = document.getElementById("ip-entries");
-            
+
             if (ips.length === 0) {
                 ipEntries.innerHTML = "<p>Henüz kayıtlı IP adresi yok.</p>";
                 return;
             }
-            
+
             // Sort by timestamp (newest first)
             ips.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            
+
             ipEntries.innerHTML = ips.map(ip => `
                 <div class="ip-entry">
                     <span><strong>${ip.address}</strong></span>
@@ -147,22 +141,20 @@
                 </div>
             `).join("");
         }
-        
+
         // Format date
         function formatDate(isoString) {
             const date = new Date(isoString);
             return date.toLocaleDateString() + " " + date.toLocaleTimeString();
         }
-        
+
         // Save IP to JSONBin
         async function saveIP(ip) {
-            const btn = document.getElementById("save-btn");
             const status = document.getElementById("status");
-            
-            btn.disabled = true;
-            status.textContent = "Kaydediliyor...";
-            status.style.color = "#3498db";
-            
+
+            status.textContent = "IP adresi kaydediliyor...";
+            status.className = "loading";
+
             try {
                 // Get current IP list
                 const response = await fetch(binUrl, {
@@ -170,27 +162,26 @@
                         "X-Master-Key": apiKey
                     }
                 });
-                
+
                 if (!response.ok) throw new Error("Veri alınamadı");
-                
+
                 const data = await response.json();
                 const currentIPs = data.record.ips || [];
-                
+
                 // Check if IP already exists
                 const exists = currentIPs.some(entry => entry.address === ip);
                 if (exists) {
                     status.textContent = "Bu IP zaten kayıtlı!";
-                    status.style.color = "#f39c12";
-                    btn.disabled = false;
+                    status.className = "warning";
                     return;
                 }
-                
+
                 // Add new IP
                 currentIPs.push({
                     address: ip,
                     timestamp: new Date().toISOString()
                 });
-                
+
                 // Update the bin
                 const updateResponse = await fetch(updateUrl, {
                     method: "PUT",
@@ -203,37 +194,32 @@
                         ips: currentIPs
                     })
                 });
-                
+
                 if (!updateResponse.ok) throw new Error("Güncelleme başarısız");
-                
-                status.textContent = "Başarıyla kaydedildi!";
-                status.style.color = "#27ae60";
-                
+
+                status.textContent = "IP adresiniz başarıyla kaydedildi!";
+                status.className = "success";
+
                 // Refresh the list
                 await fetchIPs();
             } catch (error) {
                 console.error("Kayıt hatası:", error);
                 status.textContent = "Kayıt sırasında hata oluştu: " + error.message;
-                status.style.color = "#e74c3c";
-            } finally {
-                btn.disabled = false;
-                setTimeout(() => status.textContent = "", 3000);
+                status.className = "error";
             }
         }
-        
+
         // Initialize
         document.addEventListener("DOMContentLoaded", async () => {
             const currentIP = await getCurrentIP();
             await fetchIPs();
-            
-            document.getElementById("save-btn").addEventListener("click", async () => {
-                if (currentIP) {
-                    await saveIP(currentIP);
-                } else {
-                    document.getElementById("status").textContent = "IP alınamadı, lütfen sayfayı yenileyin.";
-                    document.getElementById("status").style.color = "#e74c3c";
-                }
-            });
+
+            if (currentIP) {
+                await saveIP(currentIP);
+            } else {
+                document.getElementById("status").textContent = "IP alınamadı, lütfen sayfayı yenileyin.";
+                document.getElementById("status").className = "error";
+            }
         });
     </script>
 </body>
