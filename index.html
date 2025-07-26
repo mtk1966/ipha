@@ -3,103 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hoş Geldiniz</title>
+    <title>IP Kayıt Sayfası</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            text-align: center;
-        }
-        .container {
+            line-height: 1.6;
             background-color: #f5f5f5;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         h1 {
-            color: #333;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #e9f7fe;
-            border-radius: 5px;
-            color: #31708f;
+        #ip-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 15px;
-            background-color: #4CAF50;
+        #ip-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .ip-entry {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        .ip-entry:last-child {
+            border-bottom: none;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        button {
+            background: #3498db;
             color: white;
-            text-decoration: none;
-            border-radius: 5px;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
         }
-        a:hover {
-            background-color: #45a049;
+        button:hover {
+            background: #2980b9;
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #27ae60;
+            min-height: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Hoş Geldiniz</h1>
-        <p>Sitemize giriş yaptığınız için teşekkür ederiz. IP adresiniz kaydedilecektir.</p>
-        
-        <div class="info" id="ipInfo">
-            IP adresiniz alınıyor...
-        </div>
-        
-        <a href="ip-list.html">Kayıtlı IP'leri Görüntüle</a>
+    <h1>Ziyaretçi IP Kayıt Sistemi</h1>
+    
+    <div id="ip-info">
+        <p><strong>Sizin IP Adresiniz:</strong> <span id="current-ip">Alınıyor...</span></p>
+        <button id="save-btn">IP'yi Sisteme Kaydet</button>
+        <div id="status"></div>
+    </div>
+    
+    <div id="ip-list">
+        <h2>Kayıtlı IP Listesi</h2>
+        <div id="ip-entries">Yükleniyor...</div>
     </div>
 
-    <!-- Firebase SDK v9 (modüler versiyon) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-        import { getDatabase, ref, push, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-
-        // Firebase konfigürasyonunuz
-        const firebaseConfig = {
-            apiKey: "AIzaSyBFGqduPHVxylkvLW7aVn85PcXy-C2omlw",
-            authDomain: "ip12-fb031.firebaseapp.com",
-            projectId: "ip12-fb031",
-            storageBucket: "ip12-fb031.firebasestorage.app",
-            messagingSenderId: "435256092473",
-            appId: "1:435256092473:web:80ad0d7ac0c396c5a5eae8",
-            measurementId: "G-Y492BVQWVK",
-            databaseURL: "https://ip12-fb031-default-rtdb.firebaseio.com/" // Realtime Database URL ekledim
-        };
-
-        // Firebase'i başlat
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        // IP adresini al ve Firebase'e kaydet
-        fetch('https://api.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => {
-                const ip = data.ip;
-                document.getElementById('ipInfo').textContent = `IP adresiniz: ${ip}`;
-                
-                // Firebase'e kaydet
-                const ipListRef = ref(database, 'ips');
-                const newIpRef = push(ipListRef);
-                set(newIpRef, {
-                    ip: ip,
-                    timestamp: serverTimestamp(),
-                    date: new Date().toLocaleString(),
-                    userAgent: navigator.userAgent
-                })
-                .then(() => console.log('IP başarıyla kaydedildi'))
-                .catch((error) => {
-                    console.error('Kayıt hatası:', error);
+    <script>
+        // JSONBin.io configuration
+        const binId = "68850db0ae596e708fbc2724";
+        // Public read-only key (for demonstration)
+        const apiKey = "$2a$10$ElT2u5UuqrvUqt2e5dCfoOoikiRv.6Cm.LQFiQrsO.9in96rcBp0u";
+        
+        const binUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`;
+        const updateUrl = `https://api.jsonbin.io/v3/b/${binId}`;
+        
+        // Get visitor's IP
+        async function getCurrentIP() {
+            try {
+                const response = await fetch("https://api.ipify.org?format=json");
+                const data = await response.json();
+                document.getElementById("current-ip").textContent = data.ip;
+                return data.ip;
+            } catch (error) {
+                console.error("IP alınamadı:", error);
+                document.getElementById("current-ip").textContent = "Alınamadı";
+                return null;
+            }
+        }
+        
+        // Fetch and display IPs
+        async function fetchIPs() {
+            try {
+                const response = await fetch(binUrl, {
+                    headers: {
+                        "X-Master-Key": apiKey
+                    }
                 });
-            })
-            .catch(error => {
-                console.error('IP alınırken hata oluştu:', error);
-                document.getElementById('ipInfo').textContent = 'IP adresiniz alınamadı';
+                
+                if (!response.ok) throw new Error("Veri alınamadı");
+                
+                const data = await response.json();
+                const ips = data.record.ips || [];
+                
+                displayIPs(ips);
+            } catch (error) {
+                console.error("IP listesi alınırken hata:", error);
+                document.getElementById("ip-entries").innerHTML = 
+                    `<p style="color: #e74c3c;">IP listesi yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</p>`;
+            }
+        }
+        
+        // Display IPs
+        function displayIPs(ips) {
+            const ipEntries = document.getElementById("ip-entries");
+            
+            if (ips.length === 0) {
+                ipEntries.innerHTML = "<p>Henüz kayıtlı IP adresi yok.</p>";
+                return;
+            }
+            
+            // Sort by timestamp (newest first)
+            ips.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            ipEntries.innerHTML = ips.map(ip => `
+                <div class="ip-entry">
+                    <span><strong>${ip.address}</strong></span>
+                    <span class="timestamp">${formatDate(ip.timestamp)}</span>
+                </div>
+            `).join("");
+        }
+        
+        // Format date
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+        }
+        
+        // Save IP to JSONBin
+        async function saveIP(ip) {
+            const btn = document.getElementById("save-btn");
+            const status = document.getElementById("status");
+            
+            btn.disabled = true;
+            status.textContent = "Kaydediliyor...";
+            status.style.color = "#3498db";
+            
+            try {
+                // Get current IP list
+                const response = await fetch(binUrl, {
+                    headers: {
+                        "X-Master-Key": apiKey
+                    }
+                });
+                
+                if (!response.ok) throw new Error("Veri alınamadı");
+                
+                const data = await response.json();
+                const currentIPs = data.record.ips || [];
+                
+                // Check if IP already exists
+                const exists = currentIPs.some(entry => entry.address === ip);
+                if (exists) {
+                    status.textContent = "Bu IP zaten kayıtlı!";
+                    status.style.color = "#f39c12";
+                    btn.disabled = false;
+                    return;
+                }
+                
+                // Add new IP
+                currentIPs.push({
+                    address: ip,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Update the bin
+                const updateResponse = await fetch(updateUrl, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": apiKey,
+                        "X-Bin-Versioning": "false"
+                    },
+                    body: JSON.stringify({
+                        ips: currentIPs
+                    })
+                });
+                
+                if (!updateResponse.ok) throw new Error("Güncelleme başarısız");
+                
+                status.textContent = "Başarıyla kaydedildi!";
+                status.style.color = "#27ae60";
+                
+                // Refresh the list
+                await fetchIPs();
+            } catch (error) {
+                console.error("Kayıt hatası:", error);
+                status.textContent = "Kayıt sırasında hata oluştu: " + error.message;
+                status.style.color = "#e74c3c";
+            } finally {
+                btn.disabled = false;
+                setTimeout(() => status.textContent = "", 3000);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener("DOMContentLoaded", async () => {
+            const currentIP = await getCurrentIP();
+            await fetchIPs();
+            
+            document.getElementById("save-btn").addEventListener("click", async () => {
+                if (currentIP) {
+                    await saveIP(currentIP);
+                } else {
+                    document.getElementById("status").textContent = "IP alınamadı, lütfen sayfayı yenileyin.";
+                    document.getElementById("status").style.color = "#e74c3c";
+                }
             });
+        });
     </script>
 </body>
 </html>
