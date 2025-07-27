@@ -3,148 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kayıtlı IP Listesi</title>
+    <title>IP Kayıtları</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1000px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
         }
         h1 {
-            color: #333;
+            color: #2c3e50;
             text-align: center;
+            margin-bottom: 30px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        #ip-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        #ip-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .ip-entry {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        .ip-entry:last-child {
+            border-bottom: none;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        #status {
+            margin-top: 10px;
             font-size: 14px;
+            min-height: 20px;
+            padding: 10px;
+            border-radius: 4px;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+        .loading {
+            color: #3498db;
+            background-color: #ebf5fb;
         }
-        th {
-            background-color: #f2f2f2;
-            position: sticky;
-            top: 0;
+        .success {
+            color: #27ae60;
+            background-color: #eafaf1;
         }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .error {
+            color: #e74c3c;
+            background-color: #fdedec;
         }
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 15px;
-            background-color: #4CAF50;
+        .warning {
+            color: #f39c12;
+            background-color: #fef5e7;
+        }
+        .name-tag {
+            background-color: #3498db;
             color: white;
-            text-decoration: none;
-            border-radius: 5px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
         }
-        .back-link:hover {
-            background-color: #45a049;
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
-        .user-agent {
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .logout-btn:hover {
+            background-color: #c0392b;
         }
     </style>
 </head>
 <body>
-    <h1>Kayıtlı IP Adresleri</h1>
-    
-    <table id="ipTable">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>IP Adresi</th>
-                <th>Tarih</th>
-                <th>Cihaz Bilgisi</th>
-            </tr>
-        </thead>
-        <tbody id="ipTableBody">
-            <!-- IP listesi buraya eklenecek -->
-        </tbody>
-    </table>
-    
-    <a href="index.html" class="back-link">Geri Dön</a>
+    <button class="logout-btn" onclick="window.location.href='index.html'">Çıkış Yap</button>
+    <h1>IP Kayıt Listesi</h1>
 
-    <!-- Firebase SDK v9 (modüler versiyon) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-        import { getDatabase, ref, query, orderByChild, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    <div id="ip-list">
+        <div id="ip-entries">Yükleniyor...</div>
+    </div>
 
-        // Firebase konfigürasyonunuz
-        const firebaseConfig = {
-            apiKey: "AIzaSyBFGqduPHVxylkvLW7aVn85PcXy-C2omlw",
-            authDomain: "ip12-fb031.firebaseapp.com",
-            projectId: "ip12-fb031",
-            storageBucket: "ip12-fb031.firebasestorage.app",
-            messagingSenderId: "435256092473",
-            appId: "1:435256092473:web:80ad0d7ac0c396c5a5eae8",
-            measurementId: "G-Y492BVQWVK",
-            databaseURL: "https://ip12-fb031-default-rtdb.firebaseio.com/"
-        };
+    <script>
+        // JSONBin.io configuration
+        const binId = "68850db0ae596e708fbc2724";
+        const apiKey = "$2a$10$ElT2u5UuqrvUqt2e5dCfoOoikiRv.6Cm.LQFiQrsO.9in96rcBp0u";
 
-        // Firebase'i başlat
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+        const binUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`;
+        const updateUrl = `https://api.jsonbin.io/v3/b/${binId}`;
 
-        // IP listesini getir
-        const ipListRef = ref(database, 'ips');
-        const ipQuery = query(ipListRef, orderByChild('timestamp'));
-        
-        get(ipQuery).then((snapshot) => {
-            const ipList = [];
-            snapshot.forEach((childSnapshot) => {
-                ipList.push({
-                    id: childSnapshot.key,
-                    ...childSnapshot.val()
+        // Basit oturum kontrolü
+        if(!sessionStorage.getItem('loggedIn')) {
+            window.location.href = 'index.html';
+        }
+
+        // Fetch and display IPs
+        async function fetchIPs() {
+            try {
+                const response = await fetch(binUrl, {
+                    headers: {
+                        "X-Master-Key": apiKey
+                    }
                 });
-            });
-            
-            // Ters çevir (en yeni en üstte)
-            ipList.reverse();
-            
-            const tableBody = document.getElementById('ipTableBody');
-            
-            if (ipList.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4">Kayıtlı IP bulunamadı</td></tr>';
+
+                if (!response.ok) throw new Error("Veri alınamadı");
+
+                const data = await response.json();
+                const entries = data.record.entries || [];
+
+                displayIPs(entries);
+            } catch (error) {
+                console.error("Liste alınırken hata:", error);
+                document.getElementById("ip-entries").innerHTML = 
+                    `<div class="error">Liste yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</div>`;
+            }
+        }
+
+        // Display IPs
+        function displayIPs(entries) {
+            const ipEntries = document.getElementById("ip-entries");
+
+            if (entries.length === 0) {
+                ipEntries.innerHTML = "<p>Henüz kayıtlı kullanıcı yok.</p>";
                 return;
             }
+
+            // Sort by timestamp (newest first)
+            entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            ipEntries.innerHTML = entries.map(entry => `
+                <div class="ip-entry">
+                    <div>
+                        <span class="name-tag">${entry.name}</span>
+                        <span><strong>${entry.ip}</strong></span>
+                    </div>
+                    <span class="timestamp">${formatDate(entry.timestamp)}</span>
+                </div>
+            `).join("");
+        }
+
+        // Format date
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+        }
+
+        // Initialize
+        document.addEventListener("DOMContentLoaded", async () => {
+            await fetchIPs();
             
-            ipList.forEach((item, index) => {
-                const row = document.createElement('tr');
-                
-                const noCell = document.createElement('td');
-                noCell.textContent = index + 1;
-                
-                const ipCell = document.createElement('td');
-                ipCell.textContent = item.ip;
-                
-                const dateCell = document.createElement('td');
-                dateCell.textContent = item.date || 'Bilinmiyor';
-                
-                const uaCell = document.createElement('td');
-                uaCell.className = 'user-agent';
-                uaCell.title = item.userAgent || 'Bilinmiyor';
-                uaCell.textContent = item.userAgent || 'Bilinmiyor';
-                
-                row.appendChild(noCell);
-                row.appendChild(ipCell);
-                row.appendChild(dateCell);
-                row.appendChild(uaCell);
-                
-                tableBody.appendChild(row);
-            });
-        }).catch((error) => {
-            console.error('IP listesi alınırken hata oluştu:', error);
-            document.getElementById('ipTableBody').innerHTML = 
-                '<tr><td colspan="4">Liste yüklenirken hata oluştu</td></tr>';
+            // 30 saniyede bir listeyi güncelle
+            setInterval(fetchIPs, 30000);
         });
     </script>
 </body>
