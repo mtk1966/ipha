@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: #f5f5f5;
         }
         .header {
             display: flex;
@@ -21,7 +21,7 @@
             color: #2c3e50;
         }
         .logout-btn {
-            background-color: #e74c3c;
+            background: #e74c3c;
             color: white;
             border: none;
             padding: 10px 15px;
@@ -44,7 +44,7 @@
             border-bottom: none;
         }
         .delete-btn {
-            background-color: #e74c3c;
+            background: #e74c3c;
             color: white;
             border: none;
             padding: 5px 10px;
@@ -73,9 +73,8 @@
         }
 
         // Sayfa başlığını ayarla
-        if(userType === "admin") {
-            document.getElementById("page-title").textContent = "Admin Paneli";
-        }
+        document.getElementById("page-title").textContent = 
+            userType === "admin" ? "Admin Paneli" : "Kaydınız";
 
         // Çıkış yap
         function logout() {
@@ -84,22 +83,44 @@
         }
 
         // Kayıtları yükle
-        async function loadRecords() {
-            try {
-                // Bu örnekte localStorage kullanıyoruz
-                // Gerçek uygulamada API'ye bağlanmalı
-                let records = JSON.parse(localStorage.getItem("ipRecords")) || [];
+        function loadRecords() {
+            // Demo verileri
+            let records = [
+                { username: "admin", ip: "192.168.1.1", timestamp: new Date().toISOString() },
+                { username: "kullanici1", ip: "192.168.1.2", timestamp: new Date().toISOString() },
+                { username: "kullanici2", ip: "192.168.1.3", timestamp: new Date().toISOString() }
+            ];
+            
+            // Normal kullanıcıysa sadece kendi kaydını göster
+            if(userType === "normal") {
+                records = records.filter(record => record.username === username);
                 
-                // Adminse tüm kayıtları, normal kullanıcıysa sadece kendi kaydını göster
-                if(userType === "normal") {
-                    records = records.filter(record => record.username === username);
+                // Eğer kayıt yoksa yeni kayıt oluştur
+                if(records.length === 0) {
+                    getIP().then(ip => {
+                        if(ip) {
+                            const newRecord = {
+                                username: username,
+                                ip: ip,
+                                timestamp: new Date().toISOString()
+                            };
+                            records.push(newRecord);
+                            displayRecords(records);
+                        }
+                    });
+                    return;
                 }
-                
-                displayRecords(records);
-            } catch (error) {
-                console.error("Kayıtlar yüklenirken hata:", error);
-                document.getElementById("ip-entries").innerHTML = "Hata oluştu!";
             }
+            
+            displayRecords(records);
+        }
+
+        // IP adresini al
+        function getIP() {
+            return fetch("https://api.ipify.org?format=json")
+                .then(response => response.json())
+                .then(data => data.ip)
+                .catch(() => null);
         }
 
         // Kayıtları göster
@@ -117,7 +138,7 @@
                 <div class="ip-entry">
                     <div>
                         <strong>${record.username}</strong><br>
-                        <small>${record.ip}</small>
+                        <small>IP: ${record.ip}</small>
                     </div>
                     <div>
                         <small>${new Date(record.timestamp).toLocaleString()}</small>
@@ -135,24 +156,14 @@
             if(userType !== "admin") return;
             
             if(confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
-                let records = JSON.parse(localStorage.getItem("ipRecords")) || [];
-                records = records.filter(record => record.ip !== ip);
-                localStorage.setItem("ipRecords", JSON.stringify(records));
+                // Gerçek uygulamada burada API'ye silme isteği gönderilir
+                alert(`IP: ${ip} kaydı silindi!`);
                 loadRecords();
             }
         }
 
         // Sayfa yüklendiğinde kayıtları yükle
         document.addEventListener("DOMContentLoaded", loadRecords);
-
-        // Örnek veri ekleme (test için)
-        if(localStorage.getItem("ipRecords") === null) {
-            const sampleData = [
-                { username: "admin", ip: "192.168.1.1", timestamp: new Date().toISOString() },
-                { username: "kullanici1", ip: "192.168.1.2", timestamp: new Date().toISOString() }
-            ];
-            localStorage.setItem("ipRecords", JSON.stringify(sampleData));
-        }
     </script>
 </body>
 </html>
