@@ -51,7 +51,7 @@
         button:hover {
             background-color: #1a252f;
         }
-        #status {
+        #status, #admin-status {
             margin-top: 20px;
             padding: 10px;
             border-radius: 4px;
@@ -66,8 +66,6 @@
             background-color: #eafaf1;
             color: #27ae60;
         }
-        
-        /* Modal Stilleri */
         .modal {
             display: none;
             position: fixed;
@@ -107,7 +105,6 @@
         }
         .admin-btn:hover {
             color: #2c3e50;
-            background-color: transparent;
         }
     </style>
 </head>
@@ -139,11 +136,8 @@
     </div>
 
     <script>
-        // Kullanıcı adını saklamak için
-        let userName = '';
-        
         // Admin şifresi
-        const ADMIN_PASSWORD = "admin123"; // Gerçek uygulamada daha güçlü şifre kullanın
+        const ADMIN_PASSWORD = "admin123";
         
         // Modal elementleri
         const modal = document.getElementById("adminModal");
@@ -154,21 +148,13 @@
         document.getElementById('user-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            userName = document.getElementById('username').value.trim();
+            const userName = document.getElementById('username').value.trim();
             const status = document.getElementById('status');
             
             if (userName) {
-                status.textContent = `Hoşgeldiniz ${userName}! Kayıt sayfasına yönlendiriliyorsunuz...`;
-                status.className = "success";
-                status.style.display = "block";
-                
-                // Kullanıcı adını sessionStorage'a kaydet
                 sessionStorage.setItem('userName', userName);
-                
-                // 2 saniye sonra yönlendir
-                setTimeout(() => {
-                    window.location.href = "records.html";
-                }, 2000);
+                sessionStorage.setItem('loggedIn', 'true');
+                window.location.href = "records.html";
             } else {
                 status.textContent = "Lütfen geçerli bir isim girin!";
                 status.className = "error";
@@ -176,9 +162,28 @@
             }
         });
         
-        // Modal açma/kapama işlemleri
+        // Admin formu
+        document.getElementById('admin-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('admin-password').value;
+            const adminStatus = document.getElementById('admin-status');
+            
+            if (password === ADMIN_PASSWORD) {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                sessionStorage.setItem('loggedIn', 'true');
+                window.location.href = "records.html";
+            } else {
+                adminStatus.textContent = "Hatalı şifre!";
+                adminStatus.className = "error";
+                adminStatus.style.display = "block";
+            }
+        });
+        
+        // Modal kontrolü
         btn.onclick = function() {
             modal.style.display = "block";
+            document.getElementById('admin-status').style.display = "none";
         }
         
         span.onclick = function() {
@@ -190,31 +195,6 @@
                 modal.style.display = "none";
             }
         }
-        
-        // Admin giriş formu
-        document.getElementById('admin-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const password = document.getElementById('admin-password').value;
-            const adminStatus = document.getElementById('admin-status');
-            
-            if (password === ADMIN_PASSWORD) {
-                adminStatus.textContent = "Giriş başarılı! Yönlendiriliyorsunuz...";
-                adminStatus.className = "success";
-                
-                // Admin giriş bilgisini sessionStorage'a kaydet
-                sessionStorage.setItem('adminLoggedIn', 'true');
-                
-                // 1 saniye sonra yönlendir
-                setTimeout(() => {
-                    window.location.href = "records.html";
-                }, 1000);
-            } else {
-                adminStatus.textContent = "Hatalı şifre!";
-                adminStatus.className = "error";
-            }
-            adminStatus.style.display = "block";
-        });
     </script>
 </body>
 </html>
