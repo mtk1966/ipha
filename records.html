@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Kayıt Sistemi</title>
+    <title>IP Kayıt Listesi</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -89,18 +89,18 @@
         .logout-btn:hover {
             background-color: #c0392b;
         }
-        form {
-            margin: 20px 0;
+        #register-form {
             display: flex;
             gap: 10px;
+            margin-bottom: 20px;
         }
-        input {
+        #name-input {
+            flex-grow: 1;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            flex-grow: 1;
         }
-        button {
+        #register-btn {
             padding: 10px 20px;
             background-color: #2c3e50;
             color: white;
@@ -108,22 +108,38 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        button:hover {
+        #register-btn:hover {
             background-color: #1a252f;
+        }
+        .admin-actions {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
     <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
-    <h1>IP Kayıt Sistemi</h1>
+    <h1>IP Kayıt Listesi</h1>
 
     <div id="ip-info">
-        <form id="register-form">
-            <input type="text" id="name-input" placeholder="Adınızı girin" required>
-            <button type="submit">Kayıt Ol</button>
-        </form>
         <div id="status">
             <p><strong>Sizin IP Adresiniz:</strong> <span id="current-ip">Alınıyor...</span></p>
+        </div>
+        
+        <div id="user-section">
+            <form id="register-form">
+                <input type="text" id="name-input" placeholder="Adınızı girin" required>
+                <button type="submit" id="register-btn">Kayıt Ol</button>
+            </form>
         </div>
     </div>
 
@@ -141,14 +157,32 @@
         const updateUrl = `https://api.jsonbin.io/v3/b/${binId}`;
 
         // Oturum kontrolü
-        if(!sessionStorage.getItem('loggedIn')) {
+        const isAdmin = sessionStorage.getItem('adminLoggedIn') === 'true';
+        const userName = sessionStorage.getItem('userName');
+
+        if(!userName && !isAdmin) {
             window.location.href = 'index.html';
         }
 
         function logout() {
             sessionStorage.removeItem('loggedIn');
+            sessionStorage.removeItem('adminLoggedIn');
+            sessionStorage.removeItem('userName');
             window.location.href = 'index.html';
         }
+
+        // Admin kontrolüne göre arayüzü ayarla
+        document.addEventListener("DOMContentLoaded", function() {
+            if(isAdmin) {
+                document.getElementById('user-section').style.display = 'none';
+                document.querySelector('h1').textContent = 'Admin - IP Kayıt Listesi';
+            } else {
+                document.getElementById('current-ip').textContent = 'Alınıyor...';
+                getCurrentIP();
+            }
+            
+            fetchIPs();
+        });
 
         // Get visitor's IP
         async function getCurrentIP() {
@@ -204,7 +238,10 @@
                         <span class="name-tag">${entry.name}</span>
                         <span><strong>${entry.ip}</strong></span>
                     </div>
-                    <span class="timestamp">${formatDate(entry.timestamp)}</span>
+                    <div>
+                        <span class="timestamp">${formatDate(entry.timestamp)}</span>
+                        ${isAdmin ? `<button class="delete-btn" onclick="deleteEntry('${entry.ip}')">Sil</button>` : ''}
+                    </div>
                 </div>
             `).join("");
         }
@@ -218,6 +255,10 @@
         // Save new entry
         async function saveEntry(ip, name) {
             const status = document.getElementById("status");
+            const registerBtn = document.getElementById("register-btn");
+            
+            registerBtn.disabled = true;
+            status.innerHTML = `<div class="loading">Kayıt yapılıyor...</div>`;
             
             try {
                 // Get current entries
@@ -237,6 +278,7 @@
                     entry.name.toLowerCase() === name.toLowerCase());
                 if (nameExists) {
                     showStatus("Bu isim zaten kayıtlı! Lütfen farklı bir isim seçin.", "warning");
+                    registerBtn.disabled = false;
                     return;
                 }
 
@@ -244,6 +286,7 @@
                 const ipExists = currentEntries.some(entry => entry.ip === ip);
                 if (ipExists) {
                     showStatus("Bu IP adresi zaten kayıtlı!", "warning");
+                    registerBtn.disabled = false;
                     return;
                 }
 
@@ -277,40 +320,82 @@
             } catch (error) {
                 console.error("Kayıt hatası:", error);
                 showStatus("Kayıt sırasında hata oluştu: " + error.message, "error");
+            } finally {
+                registerBtn.disabled = false;
+            }
+        }
+
+        // Delete entry (admin only)
+        async function deleteEntry(ipToDelete) {
+            if(!confirm("Bu kaydı silmek istediğinize emin misiniz?")) return;
+            
+            try {
+                // Get current entries
+                const response = await fetch(binUrl, {
+                    headers: {
+                        "X-Master-Key": apiKey
+                    }
+                });
+
+                if (!response.ok) throw new Error("Veri alınamadı");
+
+                const data = await response.json();
+                let currentEntries = data.record.entries || [];
+
+                // Filter out the entry to delete
+                currentEntries = currentEntries.filter(entry => entry.ip !== ipToDelete);
+
+                // Update the bin
+                const updateResponse = await fetch(updateUrl, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": apiKey,
+                        "X-Bin-Versioning": "false"
+                    },
+                    body: JSON.stringify({
+                        entries: currentEntries
+                    })
+                });
+
+                if (!updateResponse.ok) throw new Error("Silme işlemi başarısız");
+
+                showStatus("Kayıt başarıyla silindi!", "success");
+                
+                // Refresh the list
+                await fetchIPs();
+            } catch (error) {
+                console.error("Silme hatası:", error);
+                showStatus("Silme sırasında hata oluştu: " + error.message, "error");
             }
         }
 
         function showStatus(message, type) {
             const status = document.getElementById("status");
             status.innerHTML = `<p><strong>Sizin IP Adresiniz:</strong> <span id="current-ip">${document.getElementById("current-ip").textContent}</span></p>
-                               <div class="${type}">${message}</div>`;
+                             <div class="${type}">${message}</div>`;
         }
 
-        // Initialize
-        document.addEventListener("DOMContentLoaded", async () => {
+        // Form submission
+        document.getElementById("register-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById("name-input").value.trim();
+            if (!name) {
+                showStatus("Lütfen geçerli bir isim girin.", "warning");
+                return;
+            }
+
             const currentIP = await getCurrentIP();
-            await fetchIPs();
-
-            const form = document.getElementById("register-form");
-            form.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                
-                const name = document.getElementById("name-input").value.trim();
-                if (!name) {
-                    showStatus("Lütfen geçerli bir isim girin.", "warning");
-                    return;
-                }
-
-                if (currentIP) {
-                    await saveEntry(currentIP, name);
-                } else {
-                    showStatus("IP adresi alınamadı, lütfen sayfayı yenileyin.", "error");
-                }
-            });
-
-            // Auto-refresh every 30 seconds
-            setInterval(fetchIPs, 30000);
+            if (currentIP) {
+                await saveEntry(currentIP, name);
+            } else {
+                showStatus("IP adresi alınamadı, lütfen sayfayı yenileyin.", "error");
+            }
         });
+
+        // Auto-refresh every 30 seconds
+        setInterval(fetchIPs, 30000);
     </script>
 </body>
 </html>
