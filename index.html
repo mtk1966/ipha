@@ -47,20 +47,62 @@
         #status {
             margin-top: 10px;
             font-size: 14px;
-            color: #27ae60;
             min-height: 20px;
+            padding: 10px;
+            border-radius: 4px;
         }
         .loading {
             color: #3498db;
+            background-color: #ebf5fb;
         }
         .success {
             color: #27ae60;
+            background-color: #eafaf1;
         }
         .error {
             color: #e74c3c;
+            background-color: #fdedec;
         }
         .warning {
             color: #f39c12;
+            background-color: #fef5e7;
+        }
+        form {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1a252f;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .name-tag {
+            background-color: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
         }
     </style>
 </head>
@@ -69,11 +111,17 @@
 
     <div id="ip-info">
         <p><strong>Sizin IP Adresiniz:</strong> <span id="current-ip">Alınıyor...</span></p>
-        <div id="status" class="loading">IP adresiniz otomatik olarak kaydediliyor...</div>
+        
+        <form id="registration-form">
+            <input type="text" id="name-input" placeholder="Adınızı girin" required>
+            <button type="submit" id="register-btn" disabled>Kayıt Ol</button>
+        </form>
+        
+        <div id="status">Lütfen adınızı girin ve kayıt ol butonuna basın.</div>
     </div>
 
     <div id="ip-list">
-        <h2>Kayıtlı IP Listesi</h2>
+        <h2>Kayıtlı Kullanıcılar</h2>
         <div id="ip-entries">Yükleniyor...</div>
     </div>
 
@@ -112,32 +160,35 @@
                 if (!response.ok) throw new Error("Veri alınamadı");
 
                 const data = await response.json();
-                const ips = data.record.ips || [];
+                const entries = data.record.entries || [];
 
-                displayIPs(ips);
+                displayIPs(entries);
             } catch (error) {
-                console.error("IP listesi alınırken hata:", error);
+                console.error("Liste alınırken hata:", error);
                 document.getElementById("ip-entries").innerHTML = 
-                    `<p style="color: #e74c3c;">IP listesi yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</p>`;
+                    `<p style="color: #e74c3c;">Liste yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</p>`;
             }
         }
 
         // Display IPs
-        function displayIPs(ips) {
+        function displayIPs(entries) {
             const ipEntries = document.getElementById("ip-entries");
 
-            if (ips.length === 0) {
-                ipEntries.innerHTML = "<p>Henüz kayıtlı IP adresi yok.</p>";
+            if (entries.length === 0) {
+                ipEntries.innerHTML = "<p>Henüz kayıtlı kullanıcı yok.</p>";
                 return;
             }
 
             // Sort by timestamp (newest first)
-            ips.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-            ipEntries.innerHTML = ips.map(ip => `
+            ipEntries.innerHTML = entries.map(entry => `
                 <div class="ip-entry">
-                    <span><strong>${ip.address}</strong></span>
-                    <span class="timestamp">${formatDate(ip.timestamp)}</span>
+                    <div>
+                        <span class="name-tag">${entry.name}</span>
+                        <span><strong>${entry.ip}</strong></span>
+                    </div>
+                    <span class="timestamp">${formatDate(entry.timestamp)}</span>
                 </div>
             `).join("");
         }
@@ -149,14 +200,16 @@
         }
 
         // Save IP to JSONBin
-        async function saveIP(ip) {
+        async function saveEntry(ip, name) {
             const status = document.getElementById("status");
+            const registerBtn = document.getElementById("register-btn");
 
-            status.textContent = "IP adresi kaydediliyor...";
+            status.textContent = "Bilgileriniz kaydediliyor...";
             status.className = "loading";
+            registerBtn.disabled = true;
 
             try {
-                // Get current IP list
+                // Get current entries
                 const response = await fetch(binUrl, {
                     headers: {
                         "X-Master-Key": apiKey
@@ -166,19 +219,30 @@
                 if (!response.ok) throw new Error("Veri alınamadı");
 
                 const data = await response.json();
-                const currentIPs = data.record.ips || [];
+                const currentEntries = data.record.entries || [];
 
-                // Check if IP already exists
-                const exists = currentIPs.some(entry => entry.address === ip);
-                if (exists) {
-                    status.textContent = "Bu IP zaten kayıtlı!";
+                // Check if name already exists
+                const nameExists = currentEntries.some(entry => entry.name.toLowerCase() === name.toLowerCase());
+                if (nameExists) {
+                    status.textContent = "Bu isim zaten kayıtlı! Lütfen farklı bir isim seçin.";
                     status.className = "warning";
+                    registerBtn.disabled = false;
                     return;
                 }
 
-                // Add new IP
-                currentIPs.push({
-                    address: ip,
+                // Check if IP already exists
+                const ipExists = currentEntries.some(entry => entry.ip === ip);
+                if (ipExists) {
+                    status.textContent = "Bu IP adresi zaten kayıtlı!";
+                    status.className = "warning";
+                    registerBtn.disabled = false;
+                    return;
+                }
+
+                // Add new entry
+                currentEntries.push({
+                    name: name,
+                    ip: ip,
                     timestamp: new Date().toISOString()
                 });
 
@@ -191,13 +255,13 @@
                         "X-Bin-Versioning": "false"
                     },
                     body: JSON.stringify({
-                        ips: currentIPs
+                        entries: currentEntries
                     })
                 });
 
                 if (!updateResponse.ok) throw new Error("Güncelleme başarısız");
 
-                status.textContent = "IP adresiniz başarıyla kaydedildi!";
+                status.textContent = "Bilgileriniz başarıyla kaydedildi!";
                 status.className = "success";
 
                 // Refresh the list
@@ -206,6 +270,7 @@
                 console.error("Kayıt hatası:", error);
                 status.textContent = "Kayıt sırasında hata oluştu: " + error.message;
                 status.className = "error";
+                registerBtn.disabled = false;
             }
         }
 
@@ -214,12 +279,32 @@
             const currentIP = await getCurrentIP();
             await fetchIPs();
 
+            const registerBtn = document.getElementById("register-btn");
+            const nameInput = document.getElementById("name-input");
+            const form = document.getElementById("registration-form");
+
             if (currentIP) {
-                await saveIP(currentIP);
+                registerBtn.disabled = false;
             } else {
                 document.getElementById("status").textContent = "IP alınamadı, lütfen sayfayı yenileyin.";
                 document.getElementById("status").className = "error";
             }
+
+            // Form submission
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                
+                const name = nameInput.value.trim();
+                if (!name) {
+                    document.getElementById("status").textContent = "Lütfen geçerli bir isim girin.";
+                    document.getElementById("status").className = "warning";
+                    return;
+                }
+
+                if (currentIP) {
+                    await saveEntry(currentIP, name);
+                }
+            });
         });
     </script>
 </body>
