@@ -3,180 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Kayıt Bilgilerim</title>
+    <title>Kayıtlar</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            margin: 0;
             padding: 20px;
-            line-height: 1.6;
             background-color: #f5f5f5;
         }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        #ip-info {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        #my-records {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
-        }
-        .record-entry {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
         }
-        .record-entry:last-child {
-            border-bottom: none;
-        }
-        .timestamp {
-            color: #7f8c8d;
-            font-size: 0.9em;
-        }
-        #status {
-            margin-top: 10px;
-            font-size: 14px;
-            min-height: 20px;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .success {
-            background-color: #eafaf1;
-            color: #27ae60;
-        }
-        .error {
-            background-color: #fdedec;
-            color: #e74c3c;
-        }
-        .info-message {
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            text-align: center;
+        h1 {
+            color: #2c3e50;
         }
         .logout-btn {
-            padding: 8px 15px;
             background-color: #e74c3c;
             color: white;
             border: none;
-            border-radius: 4px;
+            padding: 10px 15px;
+            border-radius: 5px;
             cursor: pointer;
-            position: absolute;
-            top: 20px;
-            right: 20px;
+        }
+        #ip-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .ip-entry {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        .ip-entry:last-child {
+            border-bottom: none;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
-    <h1>Kayıt Bilgilerim</h1>
-
-    <div id="ip-info">
-        <div id="status">
-            <p><strong>IP Adresiniz:</strong> <span id="current-ip">Alınıyor...</span></p>
-        </div>
+    <div class="header">
+        <h1 id="page-title">Kayıt Listesi</h1>
+        <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
     </div>
 
-    <div id="my-records">
-        <h2>Kaydınız</h2>
-        <div id="user-entry">
-            <div class="info-message">
-                <p>Kayıt bilgileriniz yükleniyor...</p>
-            </div>
-        </div>
+    <div id="ip-list">
+        <div id="ip-entries">Yükleniyor...</div>
     </div>
 
     <script>
         // Oturum kontrolü
-        const userName = sessionStorage.getItem('userName');
-        if(!userName) {
-            window.location.href = 'index.html';
+        const userType = sessionStorage.getItem("userType");
+        const username = sessionStorage.getItem("username");
+        
+        if(!userType) {
+            window.location.href = "index.html";
         }
 
+        // Sayfa başlığını ayarla
+        if(userType === "admin") {
+            document.getElementById("page-title").textContent = "Admin Paneli";
+        }
+
+        // Çıkış yap
         function logout() {
             sessionStorage.clear();
-            window.location.href = 'index.html';
+            window.location.href = "index.html";
         }
 
-        // Sayfa yüklendiğinde
-        document.addEventListener("DOMContentLoaded", async function() {
-            // IP adresini al
-            const ip = await getCurrentIP();
-            
-            // Kayıtları getir ve sadece kendi kaydını göster
-            const records = await fetchRecords();
-            displayUserRecord(records, userName, ip);
-        });
-
-        // IP adresini al
-        async function getCurrentIP() {
+        // Kayıtları yükle
+        async function loadRecords() {
             try {
-                const response = await fetch("https://api.ipify.org?format=json");
-                const data = await response.json();
-                document.getElementById("current-ip").textContent = data.ip;
-                return data.ip;
+                // Bu örnekte localStorage kullanıyoruz
+                // Gerçek uygulamada API'ye bağlanmalı
+                let records = JSON.parse(localStorage.getItem("ipRecords")) || [];
+                
+                // Adminse tüm kayıtları, normal kullanıcıysa sadece kendi kaydını göster
+                if(userType === "normal") {
+                    records = records.filter(record => record.username === username);
+                }
+                
+                displayRecords(records);
             } catch (error) {
-                console.error("IP alınamadı:", error);
-                document.getElementById("current-ip").textContent = "Alınamadı";
-                return null;
+                console.error("Kayıtlar yüklenirken hata:", error);
+                document.getElementById("ip-entries").innerHTML = "Hata oluştu!";
             }
         }
 
-        // Kayıtları getir
-        async function fetchRecords() {
-            try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/68850db0ae596e708fbc2724/latest`, {
-                    headers: {
-                        "X-Master-Key": "$2a$10$ElT2u5UuqrvUqt2e5dCfoOoikiRv.6Cm.LQFiQrsO.9in96rcBp0u"
-                    }
-                });
-                const data = await response.json();
-                return data.record.entries || [];
-            } catch (error) {
-                console.error("Kayıtlar alınamadı:", error);
-                return [];
-            }
-        }
-
-        // Sadece kullanıcının kaydını göster
-        function displayUserRecord(records, userName, currentIP) {
-            const userEntryDiv = document.getElementById("user-entry");
+        // Kayıtları göster
+        function displayRecords(records) {
+            const container = document.getElementById("ip-entries");
             
-            // Kullanıcının kaydını bul
-            const userRecord = records.find(record => 
-                record.name === userName || record.ip === currentIP
-            );
-
-            if (userRecord) {
-                userEntryDiv.innerHTML = `
-                    <div class="record-entry">
-                        <div>
-                            <strong>Adınız:</strong> ${userRecord.name}<br>
-                            <strong>IP Adresiniz:</strong> ${userRecord.ip}
-                        </div>
-                        <span class="timestamp">${new Date(userRecord.timestamp).toLocaleString()}</span>
-                    </div>
-                `;
-            } else {
-                userEntryDiv.innerHTML = `
-                    <div class="info-message">
-                        <p>Henüz kaydınız bulunmamaktadır.</p>
-                        ${currentIP ? `<p>IP adresiniz: ${currentIP}</p>` : ''}
-                    </div>
-                `;
+            if(records.length === 0) {
+                container.innerHTML = "<p>Kayıt bulunamadı</p>";
+                return;
             }
+            
+            let html = "";
+            records.forEach(record => {
+                html += `
+                <div class="ip-entry">
+                    <div>
+                        <strong>${record.username}</strong><br>
+                        <small>${record.ip}</small>
+                    </div>
+                    <div>
+                        <small>${new Date(record.timestamp).toLocaleString()}</small>
+                        ${userType === "admin" ? `<button class="delete-btn" onclick="deleteRecord('${record.ip}')">Sil</button>` : ""}
+                    </div>
+                </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Kayıt sil (sadece admin)
+        function deleteRecord(ip) {
+            if(userType !== "admin") return;
+            
+            if(confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
+                let records = JSON.parse(localStorage.getItem("ipRecords")) || [];
+                records = records.filter(record => record.ip !== ip);
+                localStorage.setItem("ipRecords", JSON.stringify(records));
+                loadRecords();
+            }
+        }
+
+        // Sayfa yüklendiğinde kayıtları yükle
+        document.addEventListener("DOMContentLoaded", loadRecords);
+
+        // Örnek veri ekleme (test için)
+        if(localStorage.getItem("ipRecords") === null) {
+            const sampleData = [
+                { username: "admin", ip: "192.168.1.1", timestamp: new Date().toISOString() },
+                { username: "kullanici1", ip: "192.168.1.2", timestamp: new Date().toISOString() }
+            ];
+            localStorage.setItem("ipRecords", JSON.stringify(sampleData));
         }
     </script>
 </body>
