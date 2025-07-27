@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Kayıt Sistemi - Giriş</title>
+    <title>IP Kayıt Sistemi</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 400px;
+            max-width: 500px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -16,29 +16,22 @@
             align-items: center;
             height: 100vh;
         }
-        .login-container {
+        .main-container {
             background: white;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             width: 100%;
+            text-align: center;
         }
         h1 {
             color: #2c3e50;
-            text-align: center;
             margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
         }
         input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 16px;
@@ -69,47 +62,158 @@
             background-color: #fdedec;
             color: #e74c3c;
         }
+        .success {
+            background-color: #eafaf1;
+            color: #27ae60;
+        }
+        
+        /* Modal Stilleri */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 400px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .admin-btn {
+            margin-top: 20px;
+            background-color: transparent;
+            color: #7f8c8d;
+            text-decoration: underline;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .admin-btn:hover {
+            color: #2c3e50;
+            background-color: transparent;
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>Admin Girişi</h1>
-        <form id="login-form">
-            <div class="form-group">
-                <label for="username">Kullanıcı Adı</label>
-                <input type="text" id="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Şifre</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit">Giriş Yap</button>
+    <div class="main-container">
+        <h1>IP Kayıt Sistemine Hoşgeldiniz</h1>
+        
+        <form id="user-form">
+            <input type="text" id="username" placeholder="Adınızı girin" required>
+            <button type="submit">Devam Et</button>
         </form>
+        
+        <button id="admin-btn" class="admin-btn">Admin Girişi</button>
+        
         <div id="status"></div>
     </div>
 
-    <script>
-        // Basit kullanıcı adı ve şifre kontrolü
-        const ADMIN_CREDENTIALS = {
-            username: "admin",
-            password: "admin123" // Gerçek uygulamada bu kadar basit şifre kullanmayın!
-        };
+    <!-- Admin Giriş Modalı -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Admin Girişi</h2>
+            <form id="admin-form">
+                <input type="password" id="admin-password" placeholder="Şifre" required>
+                <button type="submit">Giriş Yap</button>
+            </form>
+            <div id="admin-status"></div>
+        </div>
+    </div>
 
-        document.getElementById('login-form').addEventListener('submit', function(e) {
+    <script>
+        // Kullanıcı adını saklamak için
+        let userName = '';
+        
+        // Admin şifresi
+        const ADMIN_PASSWORD = "admin123"; // Gerçek uygulamada daha güçlü şifre kullanın
+        
+        // Modal elementleri
+        const modal = document.getElementById("adminModal");
+        const btn = document.getElementById("admin-btn");
+        const span = document.getElementsByClassName("close")[0];
+        
+        // Kullanıcı formu
+        document.getElementById('user-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
+            userName = document.getElementById('username').value.trim();
             const status = document.getElementById('status');
             
-            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                // Giriş başarılı, kayıt sayfasına yönlendir
-                window.location.href = "records.html";
+            if (userName) {
+                status.textContent = `Hoşgeldiniz ${userName}! Kayıt sayfasına yönlendiriliyorsunuz...`;
+                status.className = "success";
+                status.style.display = "block";
+                
+                // Kullanıcı adını sessionStorage'a kaydet
+                sessionStorage.setItem('userName', userName);
+                
+                // 2 saniye sonra yönlendir
+                setTimeout(() => {
+                    window.location.href = "records.html";
+                }, 2000);
             } else {
-                status.textContent = "Hatalı kullanıcı adı veya şifre!";
+                status.textContent = "Lütfen geçerli bir isim girin!";
                 status.className = "error";
                 status.style.display = "block";
             }
+        });
+        
+        // Modal açma/kapama işlemleri
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+        
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        
+        // Admin giriş formu
+        document.getElementById('admin-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('admin-password').value;
+            const adminStatus = document.getElementById('admin-status');
+            
+            if (password === ADMIN_PASSWORD) {
+                adminStatus.textContent = "Giriş başarılı! Yönlendiriliyorsunuz...";
+                adminStatus.className = "success";
+                
+                // Admin giriş bilgisini sessionStorage'a kaydet
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                
+                // 1 saniye sonra yönlendir
+                setTimeout(() => {
+                    window.location.href = "records.html";
+                }, 1000);
+            } else {
+                adminStatus.textContent = "Hatalı şifre!";
+                adminStatus.className = "error";
+            }
+            adminStatus.style.display = "block";
         });
     </script>
 </body>
