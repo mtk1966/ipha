@@ -291,7 +291,7 @@
 
     <script>
         // Configuration
-        const ADMIN_PASSWORD = "admin123";
+        const ADMIN_PASSWORD = "46424642";
         const JSON_BIN_ID = "68850db0ae596e708fbc2724";
         const API_KEY = "$2a$10$ElT2u5UuqrvUqt2e5dCfoOoikiRv.6Cm.LQFiQrsO.9in96rcBp0u";
         const JSON_BIN_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}`;
@@ -344,25 +344,38 @@
             }
         }
         
-        // Save record to JSONBin
+        // Save record to JSONBin with IP check
         async function saveRecord(username, ip) {
             try {
+                // Get existing records
+                const records = await fetchRecords();
+                
+                // Check if IP already exists
+                const existingIP = records.find(record => record.ip === ip);
+                if (existingIP) {
+                    return { 
+                        success: false, 
+                        message: `Bu IP adresi (${ip}) zaten ${existingIP.username} tarafından kaydedilmiş!` 
+                    };
+                }
+                
+                // Check if username already exists
+                const existingUser = records.find(record => record.username === username);
+                if (existingUser) {
+                    return { 
+                        success: false, 
+                        message: "Bu kullanıcı adı zaten kayıtlı!" 
+                    };
+                }
+                
+                // Create new record
                 const newRecord = {
                     username,
                     ip,
                     timestamp: new Date().toISOString()
                 };
                 
-                // Get existing records
-                const records = await fetchRecords();
-                
-                // Check if user already exists
-                const existingUser = records.find(record => record.username === username);
-                if (existingUser) {
-                    return { success: false, message: "Bu kullanıcı adı zaten kayıtlı" };
-                }
-                
-                // Add new record
+                // Add to records
                 records.push(newRecord);
                 
                 // Update JSONBin
@@ -372,11 +385,11 @@
                     currentRecords = records;
                     return { success: true };
                 } else {
-                    return { success: false, message: "Kayıt oluşturulamadı" };
+                    return { success: false, message: "Kayıt oluşturulamadı!" };
                 }
             } catch (error) {
                 console.error("Kayıt ekleme hatası:", error);
-                return { success: false, message: "Bir hata oluştu" };
+                return { success: false, message: "Bir hata oluştu!" };
             }
         }
         
@@ -425,7 +438,7 @@
             const username = document.getElementById("username").value.trim();
             
             if(!username) {
-                statusDiv.textContent = "Lütfen kullanıcı adı girin";
+                statusDiv.textContent = "Lütfen kullanıcı adı girin!";
                 statusDiv.className = "status-message error";
                 return;
             }
@@ -437,7 +450,7 @@
                 // Get client IP
                 const clientIP = await getClientIP();
                 
-                // Save record
+                // Save record with IP check
                 const { success, message } = await saveRecord(username, clientIP);
                 
                 if(success) {
@@ -446,11 +459,11 @@
                     showRecordsPage();
                     loadRecords();
                 } else {
-                    statusDiv.textContent = message || "Kayıt oluşturulamadı";
+                    statusDiv.textContent = message || "Kayıt oluşturulamadı!";
                     statusDiv.className = "status-message error";
                 }
             } catch (error) {
-                statusDiv.textContent = "Bir hata oluştu, lütfen tekrar deneyin";
+                statusDiv.textContent = "Bir hata oluştu, lütfen tekrar deneyin!";
                 statusDiv.className = "status-message error";
                 console.error("Giriş hatası:", error);
             }
@@ -495,7 +508,7 @@
                     adminStatusDiv.className = "status-message error";
                 }
             } catch (error) {
-                adminStatusDiv.textContent = "Giriş sırasında hata oluştu";
+                adminStatusDiv.textContent = "Giriş sırasında hata oluştu!";
                 adminStatusDiv.className = "status-message error";
                 console.error("Admin giriş hatası:", error);
             }
@@ -521,7 +534,7 @@
                 displayRecords(recordsToShow);
             } catch (error) {
                 console.error("Kayıtlar yüklenirken hata:", error);
-                ipEntries.innerHTML = '<div class="error">Kayıtlar yüklenirken hata oluştu</div>';
+                ipEntries.innerHTML = '<div class="error">Kayıtlar yüklenirken hata oluştu!</div>';
             }
         }
         
@@ -589,11 +602,11 @@
                     currentRecords = updatedRecords;
                     loadRecords();
                 } else {
-                    alert("Kayıt silinemedi, lütfen tekrar deneyin");
+                    alert("Kayıt silinemedi, lütfen tekrar deneyin!");
                 }
             } catch (error) {
                 console.error("Silme hatası:", error);
-                alert("Bir hata oluştu, lütfen tekrar deneyin");
+                alert("Bir hata oluştu, lütfen tekrar deneyin!");
             }
         }
         
