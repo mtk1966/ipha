@@ -1,1 +1,0 @@
-Denediğiniz için teşekkürler.
