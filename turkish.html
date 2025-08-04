@@ -6,6 +6,24 @@
     <title>IP Kayıt Sistemi</title>
     <style>
         body {
+            color: black;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            transition: background-color 0.5s; /* Renk geçiş efekti */
+        }
+
+        .color-button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        body {
             background-color: black;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f7fa;
@@ -13,13 +31,13 @@
             padding: 0;
             color: #333;
         }
-        
+
         .container {
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .login-container {
             background: white;
             border-radius: 10px;
@@ -29,7 +47,7 @@
             padding: 30px;
             text-align: center;
         }
-        
+
         .records-container {
             display: none;
             background: white;
@@ -38,13 +56,13 @@
             padding: 30px;
             margin-top: 30px;
         }
-        
+
         h1 {
             color: #2c3e50;
             margin-bottom: 25px;
             font-size: 24px;
         }
-        
+
         input {
             width: 100%;
             padding: 12px 15px;
@@ -55,12 +73,12 @@
             box-sizing: border-box;
             transition: border-color 0.3s;
         }
-        
-        input:focus {
-            border-color: #3498db;
-            outline: none;
-        }
-        
+
+            input:focus {
+                border-color: #3498db;
+                outline: none;
+            }
+
         button {
             width: 100%;
             padding: 12px;
@@ -73,11 +91,11 @@
             font-weight: 500;
             transition: background-color 0.3s;
         }
-        
-        button:hover {
-            background-color: #2980b9;
-        }
-        
+
+            button:hover {
+                background-color: #2980b9;
+            }
+
         .admin-btn {
             background: none;
             border: none;
@@ -87,7 +105,7 @@
             text-decoration: underline;
             font-size: 14px;
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -99,7 +117,7 @@
             background-color: rgba(0,0,0,0.5);
             backdrop-filter: blur(3px);
         }
-        
+
         .modal-content {
             background-color: white;
             margin: 10% auto;
@@ -109,7 +127,7 @@
             position: relative;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        
+
         .close {
             position: absolute;
             right: 20px;
@@ -118,7 +136,7 @@
             cursor: pointer;
             color: #7f8c8d;
         }
-        
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -127,7 +145,7 @@
             padding-bottom: 15px;
             border-bottom: 1px solid #eee;
         }
-        
+
         .logout-btn {
             background-color: #e74c3c;
             color: white;
@@ -138,18 +156,18 @@
             font-size: 14px;
             transition: background-color 0.3s;
         }
-        
-        .logout-btn:hover {
-            background-color: #c0392b;
-        }
-        
+
+            .logout-btn:hover {
+                background-color: #c0392b;
+            }
+
         #ip-list {
             background: white;
             border-radius: 10px;
             padding: 0;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        
+
         .ip-entry {
             padding: 15px 20px;
             border-bottom: 1px solid #eee;
@@ -158,25 +176,25 @@
             align-items: center;
             transition: background-color 0.2s;
         }
-        
-        .ip-entry:hover {
-            background-color: #f9f9f9;
-        }
-        
-        .ip-entry:last-child {
-            border-bottom: none;
-        }
-        
+
+            .ip-entry:hover {
+                background-color: #f9f9f9;
+            }
+
+            .ip-entry:last-child {
+                border-bottom: none;
+            }
+
         .ip-info {
             flex: 1;
         }
-        
+
         .ip-actions {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .delete-btn {
             background-color: #e74c3c;
             color: white;
@@ -187,17 +205,17 @@
             font-size: 13px;
             transition: background-color 0.3s;
         }
-        
-        .delete-btn:hover {
-            background-color: #c0392b;
-        }
-        
+
+            .delete-btn:hover {
+                background-color: #c0392b;
+            }
+
         .timestamp {
             color: #7f8c8d;
             font-size: 13px;
             margin-top: 3px;
         }
-        
+
         .status-message {
             margin-top: 15px;
             padding: 12px;
@@ -205,53 +223,57 @@
             font-size: 14px;
             text-align: center;
         }
-        
+
         .success {
             background-color: #d4edda;
             color: #155724;
         }
-        
+
         .error {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
+
         .loading {
             text-align: center;
             padding: 20px;
             color: #7f8c8d;
         }
-        
+
         .no-records {
             text-align: center;
             padding: 30px;
             color: #7f8c8d;
         }
-        
+
         @media (max-width: 768px) {
             .login-container, .modal-content {
                 width: 90%;
                 margin: 20px auto;
             }
-            
+
             .records-container {
                 padding: 15px;
             }
-            
+
             .ip-entry {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
             }
-            
+
             .ip-actions {
                 width: 100%;
                 justify-content: flex-end;
             }
         }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
 </head>
 <body>
+    <a href="#" class="color-button" style="background-color: #333333;" onclick="changeBgColor('#333333')"></a>
+    <a href="#" class="color-button" style="background-color: white;" onclick="changeBgColor('#ffffff')"></a>
+    <a href="jj.html" class="text-black color-button">English</a>
     <!-- Login Page -->
     <div class="container">
         <div class="login-container" id="login-container">
@@ -292,11 +314,11 @@
 
     <script>
         // Configuration
-        const ADMIN_PASSWORD = "46424642";
+        const ADMIN_PASSWORD = "4642";
         const JSON_BIN_ID = "68850db0ae596e708fbc2724";
         const API_KEY = "$2a$10$ElT2u5UuqrvUqt2e5dCfoOoikiRv.6Cm.LQFiQrsO.9in96rcBp0u";
         const JSON_BIN_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}`;
-        
+
         // DOM Elements
         const loginContainer = document.getElementById("login-container");
         const recordsContainer = document.getElementById("records-container");
@@ -306,32 +328,32 @@
         const statusDiv = document.getElementById("status");
         const adminStatusDiv = document.getElementById("admin-status");
         const ipEntries = document.getElementById("ip-entries");
-        
+
         // State variables
         let currentRecords = [];
-        
+
         // Initialize the application
         function initApp() {
             const userType = sessionStorage.getItem("userType");
-            
-            if(userType) {
+
+            if (userType) {
                 showRecordsPage();
                 loadRecords();
             } else {
                 loginContainer.style.display = "block";
             }
         }
-        
+
         // Show records page
         function showRecordsPage() {
             loginContainer.style.display = "none";
             recordsContainer.style.display = "block";
-            
-            if(sessionStorage.getItem("userType") === "admin") {
+
+            if (sessionStorage.getItem("userType") === "admin") {
                 document.getElementById("page-title").textContent = "Admin Paneli";
             }
         }
-        
+
         // Get client IP address
         async function getClientIP() {
             try {
@@ -344,44 +366,44 @@
                 return "Bilinmeyen IP";
             }
         }
-        
+
         // Save record to JSONBin with IP check
         async function saveRecord(username, ip) {
             try {
                 // Get existing records
                 const records = await fetchRecords();
-                
+
                 // Check if IP already exists
                 const existingIP = records.find(record => record.ip === ip);
                 if (existingIP) {
-                    return { 
-                        success: false, 
-                        message: `Bu IP adresi (${ip}) zaten ${existingIP.username} tarafından kaydedilmiş!` 
+                    return {
+                        success: false,
+                        message: `Bu IP adresi (${ip}) zaten ${existingIP.username} tarafından kaydedilmiş!`
                     };
                 }
-                
+
                 // Check if username already exists
                 const existingUser = records.find(record => record.username === username);
                 if (existingUser) {
-                    return { 
-                        success: false, 
-                        message: "Bu kullanıcı adı zaten kayıtlı!" 
+                    return {
+                        success: false,
+                        message: "Bu kullanıcı adı zaten kayıtlı!"
                     };
                 }
-                
+
                 // Create new record
                 const newRecord = {
                     username,
                     ip,
                     timestamp: new Date().toISOString()
                 };
-                
+
                 // Add to records
                 records.push(newRecord);
-                
+
                 // Update JSONBin
                 const updateSuccess = await updateJSONBin(records);
-                
+
                 if (updateSuccess) {
                     currentRecords = records;
                     return { success: true };
@@ -393,7 +415,7 @@
                 return { success: false, message: "Bir hata oluştu!" };
             }
         }
-        
+
         // Fetch records from JSONBin
         async function fetchRecords() {
             try {
@@ -403,9 +425,9 @@
                         'X-Bin-Meta': false
                     }
                 });
-                
+
                 if (!response.ok) throw new Error('Veri alınamadı');
-                
+
                 const data = await response.json();
                 return Array.isArray(data) ? data : [];
             } catch (error) {
@@ -413,7 +435,7 @@
                 return [];
             }
         }
-        
+
         // Update JSONBin
         async function updateJSONBin(records) {
             try {
@@ -425,36 +447,36 @@
                     },
                     body: JSON.stringify(records)
                 });
-                
+
                 return response.ok;
             } catch (error) {
                 console.error("JSONBin güncelleme hatası:", error);
                 return false;
             }
         }
-        
+
         // Normal user login
-        document.getElementById("user-form").addEventListener("submit", async function(e) {
+        document.getElementById("user-form").addEventListener("submit", async function (e) {
             e.preventDefault();
             const username = document.getElementById("username").value.trim();
-            
-            if(!username) {
+
+            if (!username) {
                 statusDiv.textContent = "Lütfen kullanıcı adı girin!";
                 statusDiv.className = "status-message error";
                 return;
             }
-            
+
             statusDiv.textContent = "Giriş yapılıyor...";
             statusDiv.className = "status-message";
-            
+
             try {
                 // Get client IP
                 const clientIP = await getClientIP();
-                
+
                 // Save record with IP check
                 const { success, message } = await saveRecord(username, clientIP);
-                
-                if(success) {
+
+                if (success) {
                     sessionStorage.setItem("username", username);
                     sessionStorage.setItem("userType", "normal");
                     showRecordsPage();
@@ -469,37 +491,37 @@
                 console.error("Giriş hatası:", error);
             }
         });
-        
+
         // Admin modal functions
-        adminBtn.onclick = function() {
+        adminBtn.onclick = function () {
             modal.style.display = "block";
             document.getElementById("admin-password").focus();
         };
-        
-        closeBtn.onclick = function() {
+
+        closeBtn.onclick = function () {
             modal.style.display = "none";
             adminStatusDiv.textContent = "";
             adminStatusDiv.className = "status-message";
         };
-        
-        window.onclick = function(event) {
+
+        window.onclick = function (event) {
             if (event.target == modal) {
                 modal.style.display = "none";
                 adminStatusDiv.textContent = "";
                 adminStatusDiv.className = "status-message";
             }
         };
-        
+
         // Admin login
-        document.getElementById("admin-form").addEventListener("submit", async function(e) {
+        document.getElementById("admin-form").addEventListener("submit", async function (e) {
             e.preventDefault();
             const password = document.getElementById("admin-password").value;
-            
+
             adminStatusDiv.textContent = "Giriş yapılıyor...";
             adminStatusDiv.className = "status-message";
-            
+
             try {
-                if(password === ADMIN_PASSWORD) {
+                if (password === ADMIN_PASSWORD) {
                     sessionStorage.setItem("userType", "admin");
                     modal.style.display = "none";
                     showRecordsPage();
@@ -514,38 +536,38 @@
                 console.error("Admin giriş hatası:", error);
             }
         });
-        
+
         // Load records
         async function loadRecords() {
             ipEntries.innerHTML = '<div class="loading">Yükleniyor...</div>';
-            
+
             try {
                 const records = await fetchRecords();
                 currentRecords = records;
-                
+
                 const userType = sessionStorage.getItem("userType");
                 const username = sessionStorage.getItem("username");
-                
+
                 // Filter records for normal users
                 let recordsToShow = [...records];
-                if(userType === "normal") {
+                if (userType === "normal") {
                     recordsToShow = records.filter(record => record.username === username);
                 }
-                
+
                 displayRecords(recordsToShow);
             } catch (error) {
                 console.error("Kayıtlar yüklenirken hata:", error);
                 ipEntries.innerHTML = '<div class="error">Kayıtlar yüklenirken hata oluştu!</div>';
             }
         }
-        
+
         // Display records
         function displayRecords(records) {
-            if(records.length === 0) {
+            if (records.length === 0) {
                 ipEntries.innerHTML = '<div class="no-records">Kayıt bulunamadı</div>';
                 return;
             }
-            
+
             let html = "";
             records.forEach(record => {
                 const date = new Date(record.timestamp);
@@ -556,28 +578,28 @@
                     hour: '2-digit',
                     minute: '2-digit'
                 });
-                
+
                 html += `
-                <div class="ip-entry">
-                    <div class="ip-info">
-                        <strong>${record.username}</strong>
-                        <div class="timestamp">${formattedDate}</div>
-                    </div>
-                    <div class="ip-actions">
-                        <div>${record.ip}</div>
-                        ${sessionStorage.getItem("userType") === "admin" ? 
-                          `<button class="delete-btn" data-ip="${record.ip}" data-username="${record.username}">Sil</button>` : ''}
-                    </div>
-                </div>
-                `;
+                                    <div class="ip-entry">
+                                        <div class="ip-info">
+                                            <strong>${record.username}</strong>
+                                            <div class="timestamp">${formattedDate}</div>
+                                        </div>
+                                        <div class="ip-actions">
+                                            <div>${record.ip}</div>
+                                            ${sessionStorage.getItem("userType") === "admin" ?
+                        `<button class="delete-btn" data-ip="${record.ip}" data-username="${record.username}">Sil</button>` : ''}
+                                        </div>
+                                    </div>
+                                    `;
             });
-            
+
             ipEntries.innerHTML = html;
-            
+
             // Add delete event listeners for admin
-            if(sessionStorage.getItem("userType") === "admin") {
+            if (sessionStorage.getItem("userType") === "admin") {
                 document.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', async function() {
+                    button.addEventListener('click', async function () {
                         const ip = this.getAttribute('data-ip');
                         const username = this.getAttribute('data-username');
                         await deleteRecord(ip, username);
@@ -585,21 +607,21 @@
                 });
             }
         }
-        
+
         // Delete record
         async function deleteRecord(ip, username) {
-            if(sessionStorage.getItem("userType") !== "admin") return;
-            
+            if (sessionStorage.getItem("userType") !== "admin") return;
+
             const confirmation = confirm(`${username} kullanıcısının kaydını silmek istediğinize emin misiniz? (IP: ${ip})`);
-            if(!confirmation) return;
-            
+            if (!confirmation) return;
+
             try {
                 const records = await fetchRecords();
                 const updatedRecords = records.filter(record => record.ip !== ip);
-                
+
                 const updateSuccess = await updateJSONBin(updatedRecords);
-                
-                if(updateSuccess) {
+
+                if (updateSuccess) {
                     currentRecords = updatedRecords;
                     loadRecords();
                 } else {
@@ -610,7 +632,7 @@
                 alert("Bir hata oluştu, lütfen tekrar deneyin!");
             }
         }
-        
+
         // Logout
         function logout() {
             sessionStorage.clear();
@@ -621,9 +643,14 @@
             statusDiv.textContent = "";
             statusDiv.className = "status-message";
         }
-        
+
         // Initialize the app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initApp);
+        document.addEventListener('DOMContentLoaded', initApp);</script>
+    <script>
+        function changeBgColor(color) {
+            document.body.style.backgroundColor = color;
+        }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
 </body>
 </html>
