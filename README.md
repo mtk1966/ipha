@@ -1,1 +1,1 @@
-ÇXŞÜAFA
+Denediğiniz için teşekkürler.
